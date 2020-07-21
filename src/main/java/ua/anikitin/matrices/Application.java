@@ -43,6 +43,7 @@ public class Application {
                                         UserInterface userInterface) {
         long startTime = System.currentTimeMillis();
         Matrix2DSquare result = Matrix2DSquare.multiply(matrix1, matrix2, new SequentialMatrixMultiplication());
+        userInterface.printMatrix(result, "parallel division result");
         long endTime = System.currentTimeMillis();
         userInterface.operationStatus("sequential division", endTime - startTime);
     }

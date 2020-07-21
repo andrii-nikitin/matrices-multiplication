@@ -2,10 +2,9 @@ package ua.anikitin.matrices.multiply;
 
 import ua.anikitin.matrices.matrix.Matrix2DSquare;
 
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
 
 public class ParallelMatrixMultiplication implements MatrixMultiplicationStrategy {
     private final CompletionService<Integer[]> completionService;
@@ -21,31 +20,30 @@ public class ParallelMatrixMultiplication implements MatrixMultiplicationStrateg
         }
         int size = arg0.getSize();
         Matrix2DSquare result = new Matrix2DSquare(size);
+        List<Future<Integer[]>> waitList = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            submitDivision(arg0, arg1, i, size);
-            waitForTheExecution(size, result);
+            Future<Integer[]> resultFuture = submitDivision(arg0, arg1, i, size);
+            waitList.add(resultFuture);
         }
-        System.out.println("done");
+        applyAll(size, result, waitList);
         return result;
     }
 
-    private void waitForTheExecution(int size, Matrix2DSquare result) {
-        int received = 0;
-        while (received < size) {
+    private void applyAll(int size, Matrix2DSquare result, List<Future<Integer[]>> waitList) {
+        waitList.forEach(future -> {
             try {
-                Integer[] jobResult = completionService.take().get();
+                Integer[] jobResult = future.get();
                 for (int j = 0; j < size; j++) {
-                    result.setXY(jobResult[0], j, jobResult[j]);
+                    result.setXY(jobResult[0], j, jobResult[j + 1]);
                 }
-                received++;
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException("concurrent execution failed", e);
             }
-        }
+        });
     }
 
-    private void submitDivision(Matrix2DSquare arg0, Matrix2DSquare arg1, int i, int size) {
-        completionService.submit(() -> calculateRow(arg0, arg1, i, size));
+    private Future<Integer[]> submitDivision(Matrix2DSquare arg0, Matrix2DSquare arg1, int i, int size) {
+        return completionService.submit(() -> calculateRow(arg0, arg1, i, size));
     }
 
     private Integer[] calculateRow(Matrix2DSquare arg0, Matrix2DSquare arg1, int i, int size) {
