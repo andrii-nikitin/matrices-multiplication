@@ -4,7 +4,6 @@ import ua.anikitin.matrices.matrix.Matrix2DSquare;
 
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Locale;
 import java.util.Scanner;
 
 public class UserInterface {
@@ -14,6 +13,7 @@ public class UserInterface {
     private static final int MAX_INPUT = 10_000;
     private static final String MATRIX_MSG = "Matrix %s:";
     private static final String OPERATION_STATUS = "Operation %s took %d ms";
+    private static final String MATRIX_TOO_BIG = "<the matrix is too big to print>";
 
     private final Scanner scanner;
     private final PrintStream out;
@@ -34,7 +34,11 @@ public class UserInterface {
 
     public void printMatrix(Matrix2DSquare matrix, String name) {
         out.println(String.format(MATRIX_MSG, name));
-        out.println(matrix.print());
+        if (matrix.getSize() <= 10) {
+            out.println(matrix.print());
+        } else {
+            out.println(MATRIX_TOO_BIG);
+        }
     }
 
     public void operationStatus(String operationName, long timeExceeded) {
