@@ -19,6 +19,9 @@ public class Matrix2DSquare {
 
     public static Matrix2DSquare multiply(Matrix2DSquare arg0, Matrix2DSquare arg1,
                                           MatrixMultiplicationStrategy strategy) {
+        if (arg0.getSize() != arg1.getSize()) {
+            throw new RuntimeException("matrices should be same size to perform multiplication!");
+        }
         return strategy.multiply(arg0, arg1);
     }
 

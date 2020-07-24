@@ -3,6 +3,7 @@ package ua.anikitin.matrices;
 import ua.anikitin.matrices.matrix.Matrix2DSquare;
 import ua.anikitin.matrices.matrix.MatrixGenerator;
 import ua.anikitin.matrices.multiply.ParallelMatrixMultiplication;
+import ua.anikitin.matrices.multiply.ParallelMatrixMultiplicationV2;
 import ua.anikitin.matrices.multiply.SequentialMatrixMultiplication;
 
 import java.util.concurrent.ExecutorService;
@@ -27,6 +28,7 @@ public class Application {
 
         runSequentially(matrix1, matrix2, userInterface);
         runInParallel(matrix1, matrix2, userInterface);
+        runInParallelV2(matrix1, matrix2, userInterface);
     }
 
     private static void runInParallel(Matrix2DSquare matrix1, Matrix2DSquare matrix2,
@@ -36,6 +38,16 @@ public class Application {
         userInterface.printMatrix(result, "parallel division result");
         long endTime = System.currentTimeMillis();
         userInterface.operationStatus("parallel division", endTime - startTime);
+
+    }
+
+    private static void runInParallelV2(Matrix2DSquare matrix1, Matrix2DSquare matrix2,
+                                      UserInterface userInterface) {
+        long startTime = System.currentTimeMillis();
+        Matrix2DSquare result = Matrix2DSquare.multiply(matrix1, matrix2, new ParallelMatrixMultiplicationV2(executor));
+        userInterface.printMatrix(result, "parallel v2 division result");
+        long endTime = System.currentTimeMillis();
+        userInterface.operationStatus("parallel v2 division", endTime - startTime);
 
     }
 

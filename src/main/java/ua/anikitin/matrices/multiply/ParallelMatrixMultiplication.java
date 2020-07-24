@@ -7,17 +7,14 @@ import java.util.List;
 import java.util.concurrent.*;
 
 public class ParallelMatrixMultiplication implements MatrixMultiplicationStrategy {
-    private final CompletionService<Integer[]> completionService;
+    private final ExecutorService executor;
 
     public ParallelMatrixMultiplication(ExecutorService executor) {
-        this.completionService = new ExecutorCompletionService<>(executor);
+        this.executor = executor;
     }
 
     @Override
     public Matrix2DSquare multiply(Matrix2DSquare arg0, Matrix2DSquare arg1) {
-        if (arg0.getSize() != arg1.getSize()) {
-            throw new RuntimeException("matrices should be same size to perform multiplication!");
-        }
         int size = arg0.getSize();
         Matrix2DSquare result = new Matrix2DSquare(size);
         List<Future<Integer[]>> waitList = new ArrayList<>();
@@ -43,7 +40,7 @@ public class ParallelMatrixMultiplication implements MatrixMultiplicationStrateg
     }
 
     private Future<Integer[]> submitDivision(Matrix2DSquare arg0, Matrix2DSquare arg1, int i, int size) {
-        return completionService.submit(() -> calculateRow(arg0, arg1, i, size));
+        return executor.submit(() -> calculateRow(arg0, arg1, i, size));
     }
 
     private Integer[] calculateRow(Matrix2DSquare arg0, Matrix2DSquare arg1, int i, int size) {
