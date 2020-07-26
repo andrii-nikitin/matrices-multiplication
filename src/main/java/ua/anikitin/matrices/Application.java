@@ -32,7 +32,8 @@ public class Application {
     private static void runInParallel(Matrix2DSquare matrix1, Matrix2DSquare matrix2,
                                       UserInterface userInterface) {
         long startTime = System.currentTimeMillis();
-        Matrix2DSquare result = Matrix2DSquare.multiply(matrix1, matrix2, new ParallelMatrixMultiplication(executor));
+        matrix1.setMultiplicationStrategy(new ParallelMatrixMultiplication(executor));
+        Matrix2DSquare result = matrix1.multiply(matrix2);
         userInterface.printMatrix(result, "parallel division result");
         long endTime = System.currentTimeMillis();
         userInterface.operationStatus("parallel division", endTime - startTime);
@@ -42,7 +43,8 @@ public class Application {
     private static void runSequentially(Matrix2DSquare matrix1, Matrix2DSquare matrix2,
                                         UserInterface userInterface) {
         long startTime = System.currentTimeMillis();
-        Matrix2DSquare result = Matrix2DSquare.multiply(matrix1, matrix2, new SequentialMatrixMultiplication());
+        matrix1.setMultiplicationStrategy(new SequentialMatrixMultiplication());
+        Matrix2DSquare result = matrix1.multiply(matrix2);
         userInterface.printMatrix(result, "parallel division result");
         long endTime = System.currentTimeMillis();
         userInterface.operationStatus("sequential division", endTime - startTime);

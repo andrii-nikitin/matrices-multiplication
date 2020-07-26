@@ -1,25 +1,33 @@
 package ua.anikitin.matrices.matrix;
 
 import ua.anikitin.matrices.multiply.MatrixMultiplicationStrategy;
+import ua.anikitin.matrices.multiply.SequentialMatrixMultiplication;
 
 public class Matrix2DSquare {
 
     private final int[] data;
     private final int size;
 
-    public Matrix2DSquare(int size, int[] data) {
-        this.data = data;
-        this.size = size;
-    }
+    private MatrixMultiplicationStrategy multiplicationStrategy;
 
     public Matrix2DSquare(int size) {
         this.size = size;
         this.data = new int[size * size];
+        multiplicationStrategy = new SequentialMatrixMultiplication();
     }
 
-    public static Matrix2DSquare multiply(Matrix2DSquare arg0, Matrix2DSquare arg1,
-                                          MatrixMultiplicationStrategy strategy) {
-        return strategy.multiply(arg0, arg1);
+    public Matrix2DSquare(int size, int[] data) {
+        this.data = data;
+        this.size = size;
+        multiplicationStrategy = new SequentialMatrixMultiplication();
+    }
+
+    public Matrix2DSquare multiply(Matrix2DSquare arg0) {
+        if (arg0.getSize() != this.getSize()) {
+            throw new RuntimeException("matrices should be the same size to perform multiplication!");
+        }
+
+        return multiplicationStrategy.multiply(this, arg0);
     }
 
     public void setXY(int x, int y, int value) {
@@ -45,5 +53,13 @@ public class Matrix2DSquare {
             result.append('|').append('\n');
         }
         return result.toString();
+    }
+
+    public MatrixMultiplicationStrategy getMultiplicationStrategy() {
+        return multiplicationStrategy;
+    }
+
+    public void setMultiplicationStrategy(MatrixMultiplicationStrategy multiplicationStrategy) {
+        this.multiplicationStrategy = multiplicationStrategy;
     }
 }

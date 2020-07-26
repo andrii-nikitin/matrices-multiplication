@@ -5,53 +5,39 @@ import ua.anikitin.matrices.matrix.Matrix2DSquare;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ParallelMatrixMultiplication implements MatrixMultiplicationStrategy {
-    private final CompletionService<Integer[]> completionService;
+    private final ExecutorService executor;
 
     public ParallelMatrixMultiplication(ExecutorService executor) {
-        this.completionService = new ExecutorCompletionService<>(executor);
+        this.executor = executor;
     }
 
     @Override
     public Matrix2DSquare multiply(Matrix2DSquare arg0, Matrix2DSquare arg1) {
-        if (arg0.getSize() != arg1.getSize()) {
-            throw new RuntimeException("matrices should be same size to perform multiplication!");
-        }
         int size = arg0.getSize();
         Matrix2DSquare result = new Matrix2DSquare(size);
-        List<Future<Integer[]>> waitList = new ArrayList<>();
+        CompletableFuture<Void>[] waitList = new CompletableFuture[size];
         for (int i = 0; i < size; i++) {
-            Future<Integer[]> resultFuture = submitDivision(arg0, arg1, i, size);
-            waitList.add(resultFuture);
+            final int rowNum = i;
+            CompletableFuture<Void> resultFuture = CompletableFuture.supplyAsync(()
+                    -> calculateRow(arg0, arg1, rowNum, size, result), executor);
+            waitList[i] = resultFuture;
         }
-        applyAll(size, result, waitList);
-        return result;
-    }
-
-    private void applyAll(int size, Matrix2DSquare result, List<Future<Integer[]>> waitList) {
-        waitList.forEach(future -> {
-            try {
-                Integer[] jobResult = future.get();
-                for (int j = 0; j < size; j++) {
-                    result.setXY(jobResult[0], j, jobResult[j + 1]);
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException("concurrent execution failed", e);
-            }
-        });
-    }
-
-    private Future<Integer[]> submitDivision(Matrix2DSquare arg0, Matrix2DSquare arg1, int i, int size) {
-        return completionService.submit(() -> calculateRow(arg0, arg1, i, size));
-    }
-
-    private Integer[] calculateRow(Matrix2DSquare arg0, Matrix2DSquare arg1, int i, int size) {
-        Integer[] result = new Integer[size + 1];
-        result[0] = i;
-        for (int j = 0; j < size; j++){
-            result[j + 1] = ArithmeticalUtil.multiplyRowToColumn(arg0, i, arg1, j);
+        try {
+            CompletableFuture.allOf(waitList).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Concurrent execution failed", e);
         }
         return result;
+    }
+
+    private Void calculateRow(Matrix2DSquare arg0, Matrix2DSquare arg1, int rowNum, int size, Matrix2DSquare result) {
+        for (int columnNum = 0; columnNum < size; columnNum++) {
+            int resultIJ = ArithmeticalUtil.multiplyRowToColumn(arg0, rowNum, arg1, columnNum);
+            result.setXY(rowNum, columnNum, resultIJ);
+        }
+        return null;
     }
 }
